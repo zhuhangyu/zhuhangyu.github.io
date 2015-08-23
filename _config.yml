@@ -17,8 +17,3 @@ redcarpet:
     - tables
 
 paginate: 20
-
-comments :
-  provider : duoshuo
-  duoshuo : 
-    short_name : zhuhangyu
