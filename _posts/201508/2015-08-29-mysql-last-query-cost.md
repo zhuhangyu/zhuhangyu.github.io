@@ -3,7 +3,7 @@ layout: post
 title:  "记一次网站调优过程中Last_query_cost的优化"
 date:   2015-08-29 23:00:00
 categories: mysql
-tags: mysql explain Last_query_cost php php-fpm errorlog slowlog
+tags: mysql php
 author: "zhuhangyu"
 ---
 
