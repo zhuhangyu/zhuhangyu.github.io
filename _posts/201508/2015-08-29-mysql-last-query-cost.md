@@ -1,18 +1,22 @@
 ---
 layout: post
-title:  "记一次网站调优过程"
+title:  "记一次网站调优过程中Last_query_cost的优化"
 date:   2015-08-29 23:00:00
 categories: mysql
 tags: mysql explain Last_query_cost php php-fpm errorlog slowlog
 author: "zhuhangyu"
 ---
 
-Last_query_cost的优化
+公司网站程序重写了，近期准备上线。由于没有专门的压力测试人员，所以我只有自己做压力测试。
+
+使用locust模拟了200个用户，访问商品列表页，发现效果非常差。
+
+下面是分析过程：
 
 php errorlog 有大量的如下信息，我这里只截取了一条
 
 [29-Aug-2015 11:48:52] WARNING: [pool www] seems busy (you may need to increase pm.start_servers, or pm.min/max_spare_servers), spawning 16 children, there are 0 idle, and 85 total children
-[29-Aug-2015 11:03:08] WARNING: [pool www] child 1155, script '/Data/website/tsy-web/web/index.php' (request: "GET /index.php") execution timed out (13.761323 sec), terminating
+[29-Aug-2015 11:03:08] WARNING: [pool www] child 1155, script '/web/index.php' (request: "GET /index.php") execution timed out (13.761323 sec), terminating
 
 
 看到这里，千万不要以为增大php-fpm的进程数就可以解决问题，要找到根本原因才行。
@@ -32,9 +36,8 @@ vmstat也看到，free那一列的内存数值很快的变大变小
 php-fpm slowlog有大量的如下信息，我这里只截取了一条
 
 [29-Aug-2015 20:35:39]  [pool www] pid 30302
-script_filename = /Data/website/tsy-web/web/index.php
-[0x00007f68d8f3e608] execute() /Data/website/tsy-web/vendor/yiisoft/yii2/db/Command.php:825
-
+script_filename = /web/index.php
+[0x00007f68d8f3e608] execute() /db/Command.php:825
 
 
 从这里看出，第一条栈的信息，就是具体执行慢的原因，大概和db有关。
@@ -43,6 +46,7 @@ script_filename = /Data/website/tsy-web/web/index.php
 
 看慢查询日志，有这么一条，被记录了很多次，因为我就压力测试一个页面，居然有的执行花费了54秒
 
+```sql
 mysql> select * from t_trades where (((gameid=1) and (states=2) and (isdel=3)) and (goodsid=4)) and (count-soldcount>5) order by id desc;
 Empty set (0.07 sec)
 
@@ -54,6 +58,7 @@ mysql> show status like '%last_query%';
 | Last_query_partial_plans | 1            |
 +--------------------------+--------------+
 2 rows in set (0.00 sec)
+```
 
 返回空结果集，但是0.07s，不是很慢吧，就是Last_query_cost很高，换一下值，找一个返回有结果集的
 
