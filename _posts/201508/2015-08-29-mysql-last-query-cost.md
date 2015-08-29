@@ -62,6 +62,7 @@ mysql> show status like '%last_query%';
 
 返回空结果集，但是0.07s，不是很慢吧，就是Last_query_cost很高，换一下值，找一个返回有结果集的
 
+```sql
 mysql> select count(*) from t_trades where ( ( ( `gameid` =297 ) and ( `states` =2) and ( `isdel` =0 ) ) and ( `goodsid` = 1) ) and ( count-soldcount > 0 ) order by `id` desc;        
 +----------+
 | count(*) |
@@ -78,9 +79,11 @@ mysql> show status like '%last_query%';
 | Last_query_partial_plans | 1           |
 +--------------------------+-------------+
 2 rows in set (0.00 sec)
+```
 
 看着也不慢啊，才0.02s，同样Last_query_cost挺高的，这是为什么呢，explain看一下
 
+```sql
 mysql> explain select count(*) from t_trades where (((gameid=1) and (states=2) and (isdel=3)) and (goodsid=4)) and (count-soldcount>5) order by id desc;
 +----+-------------+----------+------+-----------------------------+-------+---------+-------+------+-------------+
 | id | select_type | table    | type | possible_keys               | key   | key_len | ref   | rows | Extra       |
@@ -88,11 +91,13 @@ mysql> explain select count(*) from t_trades where (((gameid=1) and (states=2) a
 |  1 | SIMPLE      | t_trades | ref  | gameid,states,isdel,goodsid | isdel | 2       | const |    1 | Using where |
 +----+-------------+----------+------+-----------------------------+-------+---------+-------+------+-------------+
 1 row in set (0.01 sec)
+```
 
 居然给四个字段单独做了索引，show indexes from t_trades 看了一下，这四个字段的Cardinality都特别低，都是100以内。
 
 于是删掉这四个索引，建了一个联合索引，再看看explain
 
+```sql
 mysql> explain select * from `t_trades` where `gameid`=297 order by `discount` desc limit 10; 
 +----+-------------+----------+------+---------------------+---------------------+---------+-------+-------+-----------------------------+
 | id | select_type | table    | type | possible_keys       | key                 | key_len | ref   | rows  | Extra                       |
@@ -100,10 +105,11 @@ mysql> explain select * from `t_trades` where `gameid`=297 order by `discount` d
 |  1 | SIMPLE      | t_trades | ref  | gid_sta_del_goodsid | gid_sta_del_goodsid | 5       | const | 14268 | Using where; Using filesort |
 +----+-------------+----------+------+---------------------+---------------------+---------+-------+-------+-----------------------------+
 1 row in set (0.00 sec)
+```
 
 嗯，正确使用索引了
 
-
+```sql
 mysql> select count(*) from t_trades where ( ( ( `gameid` =297 ) and ( `states` =2) and ( `isdel` =0 ) ) and ( `goodsid` = 1) ) and ( count-soldcount > 0 ) order by `id` desc;
 +----------+
 | count(*) |
@@ -111,9 +117,11 @@ mysql> select count(*) from t_trades where ( ( ( `gameid` =297 ) and ( `states` 
 |      314 |
 +----------+
 1 row in set (0.00 sec)
+```
 
 时间在10ms之下了，不错哦，再看看Last_query_cost
 
+```sql
 mysql> show status like '%last_query%';
 +--------------------------+------------+
 | Variable_name            | Value      |
@@ -122,6 +130,7 @@ mysql> show status like '%last_query%';
 | Last_query_partial_plans | 1          |
 +--------------------------+------------+
 2 rows in set (0.00 sec)
+```
 
 减少了1个数量级哦
 
