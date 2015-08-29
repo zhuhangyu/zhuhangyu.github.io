@@ -9,11 +9,11 @@ author: "zhuhangyu"
 
 公司网站程序重写了，近期准备上线。由于没有专门的压力测试人员，所以我只有自己做压力测试。
 
-使用locust模拟了200个用户，访问商品列表页，发现效果非常差。
+使用`locust`模拟了200个用户，访问商品列表页，发现效果非常差。
 
 下面是分析过程：
 
-php errorlog 有大量的如下信息，我这里只截取了一条
+php `errorlog`有大量的如下信息，我这里只截取了一条
 
 ```text
 [29-Aug-2015 11:48:52] WARNING: [pool www] seems busy (you may need to increase pm.start_servers, or pm.min/max_spare_servers), spawning 16 children, there are 0 idle, and 85 total children
@@ -24,23 +24,25 @@ php errorlog 有大量的如下信息，我这里只截取了一条
 看到这里，千万不要以为增大php-fpm的进程数就可以解决问题，要找到根本原因才行。
 还有如下信息
 
+```text
 [29-Aug-2015 11:03:08] NOTICE: child 1347 stopped for tracing
 [29-Aug-2015 11:03:08] NOTICE: about to trace 1347
 [29-Aug-2015 11:03:08] NOTICE: finished trace of 1347
 [29-Aug-2015 11:03:08] WARNING: [pool www] child 1345 exited on signal 15 (SIGTERM) after 16.655853 seconds from start
 [29-Aug-2015 11:03:08] NOTICE: [pool www] child 1485 started
-
+```
 
 vmstat也看到，free那一列的内存数值很快的变大变小
 
 我理解为：php-fpm收到请求，但是执行很慢，很快达到pm设置的上限。随后不停的有请求进来，php-fpm不得不强行终止超时的请求，终止掉自身进程，重新开启新进程
 
-php-fpm slowlog有大量的如下信息，我这里只截取了一条
+php-fpm `slowlog`有大量的如下信息，我这里只截取了一条
 
+```text
 [29-Aug-2015 20:35:39]  [pool www] pid 30302
 script_filename = /web/index.php
 [0x00007f68d8f3e608] execute() /db/Command.php:825
-
+```
 
 从这里看出，第一条栈的信息，就是具体执行慢的原因，大概和db有关。
 
@@ -62,7 +64,7 @@ mysql> show status like '%last_query%';
 2 rows in set (0.00 sec)
 ```
 
-返回空结果集，但是0.07s，不是很慢吧，就是Last_query_cost很高，换一下值，找一个返回有结果集的
+返回空结果集，但是0.07s，不是很慢吧，就是`Last_query_cost`很高，换一下值，找一个返回有结果集的
 
 ```sql
 mysql> select count(*) from t_trades where ( ( ( `gameid` =297 ) and ( `states` =2) and ( `isdel` =0 ) ) and ( `goodsid` = 1) ) and ( count-soldcount > 0 ) order by `id` desc;        
@@ -83,7 +85,7 @@ mysql> show status like '%last_query%';
 2 rows in set (0.00 sec)
 ```
 
-看着也不慢啊，才0.02s，同样Last_query_cost挺高的，这是为什么呢，explain看一下
+看着也不慢啊，才0.02s，同样`Last_query_cos`t挺高的，这是为什么呢，`explain`看一下
 
 ```sql
 mysql> explain select count(*) from t_trades where (((gameid=1) and (states=2) and (isdel=3)) and (goodsid=4)) and (count-soldcount>5) order by id desc;
@@ -95,9 +97,9 @@ mysql> explain select count(*) from t_trades where (((gameid=1) and (states=2) a
 1 row in set (0.01 sec)
 ```
 
-居然给四个字段单独做了索引，show indexes from t_trades 看了一下，这四个字段的Cardinality都特别低，都是100以内。
+居然给四个字段单独做了索引，`show indexes from t_trades`看了一下，这四个字段的`Cardinality`都特别低，都是100以内。
 
-于是删掉这四个索引，建了一个联合索引，再看看explain
+于是删掉这四个索引，建了一个联合索引，再看看`explain`
 
 ```sql
 mysql> explain select * from `t_trades` where `gameid`=297 order by `discount` desc limit 10; 
@@ -121,7 +123,7 @@ mysql> select count(*) from t_trades where ( ( ( `gameid` =297 ) and ( `states` 
 1 row in set (0.00 sec)
 ```
 
-时间在10ms之下了，不错哦，再看看Last_query_cost
+时间在10ms之下了，不错哦，再看看`Last_query_cost`
 
 ```sql
 mysql> show status like '%last_query%';
