@@ -15,8 +15,8 @@ author: "zhuhangyu"
 
 php errorlog 有大量的如下信息，我这里只截取了一条
 
-[29-Aug-2015 11:48:52] WARNING: [pool www] seems busy (you may need to increase pm.start_servers, or pm.min/max_spare_servers), spawning 16 children, there are 0 idle, and 85 total children
-[29-Aug-2015 11:03:08] WARNING: [pool www] child 1155, script '/web/index.php' (request: "GET /index.php") execution timed out (13.761323 sec), terminating
+>[29-Aug-2015 11:48:52] WARNING: [pool www] seems busy (you may need to increase pm.start_servers, or pm.min/max_spare_servers), spawning 16 children, there are 0 idle, and 85 total children
+>[29-Aug-2015 11:03:08] WARNING: [pool www] child 1155, script '/web/index.php' (request: "GET /index.php") execution timed out (13.761323 sec), terminating
 
 
 看到这里，千万不要以为增大php-fpm的进程数就可以解决问题，要找到根本原因才行。
