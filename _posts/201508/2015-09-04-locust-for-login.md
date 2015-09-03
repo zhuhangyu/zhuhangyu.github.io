@@ -47,6 +47,7 @@ class WebsiteUser(HttpLocust):
 但是，这只限于简单的表单，现在基本上大部分网站的登录方式都不简单，所以根本行不通。
 
 对于我们这个网站的登录，基于之前我学习到的分析网站登录步骤，用浏览器f12观察过程，大概方式如下：
+
 * 当client填完用户名密码后，点登录按钮，会先去get一个url，得到一个public key，同一个账号获得的key是不变的(不同的账号的key是不是不同，我倒没试过)
 * 然后client对这个key加密了，而且每次加密后的内容不同，接着post一个url，这时候server应该是用本身的private key解密了刚才client post过来的key，然后存进session
 * 然后server又把已经解密的key再次用别的方式加密了，响应给client
