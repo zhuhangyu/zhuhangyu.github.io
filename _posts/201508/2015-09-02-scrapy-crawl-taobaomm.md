@@ -49,7 +49,7 @@ class PhantomJSMiddleware(object):
 
 还有一个问题是，在登录出现验证码的时候进行截屏，发现总是乱码，解决方法是：
 
-```shell
+```
 sudo apt-get install ttf-wqy-microhei  #文泉驿-微米黑
 sudo apt-get install ttf-wqy-zenhei  #文泉驿-正黑
 sudo apt-get install xfonts-wqy #文泉驿-点阵宋体
@@ -57,7 +57,7 @@ sudo apt-get install xfonts-wqy #文泉驿-点阵宋体
 
 或者(我用的是ubuntu 14.04，用的是上面的包，下面的是centos的包，遇到问题的朋友可以试试看)
 
-```shell
+```
 yum install fonts-chinese
 ```
 
