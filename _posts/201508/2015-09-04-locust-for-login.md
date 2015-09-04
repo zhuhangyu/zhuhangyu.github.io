@@ -107,3 +107,5 @@ class WebsiteUser(HttpLocust):
 * 所以我们只需要把driver获取到的cookies取出每个cookie的name的值和value的值，然后组成一个dict
 
 所有压测代码写完后，以后该考虑自动化压测了，继续努力吧。
+
+**补充：这个方法如果模拟用户较多，会导致PhantomJS非常占用cpu，按网上说的：传入`service_args = ['--load-images=false', '--disk-cache=true']`，效果也很不理想。虽然实现了功能，但最后证实不是一个好办法:(**
